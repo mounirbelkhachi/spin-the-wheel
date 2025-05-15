@@ -1,0 +1,106 @@
+// Array of prizes
+const prizes = [
+  "Free Gift Card ($10)",
+  "50% Off Temu Purchase",
+  "Spin Again",
+  "Free Shipping on Temu",
+  "Win $100 Cash",
+  "Exclusive Deal on Temu"
+];
+
+const canvas = document.getElementById("wheel");
+const ctx = canvas.getContext("2d");
+const spinButton = document.getElementById("spinButton");
+const result = document.getElementById("result");
+const prizeElement = document.getElementById("prize");
+const claimButton = document.getElementById("claimButton");
+
+// Create the wheel
+const wheelRadius = 250;
+const angleStep = (2 * Math.PI) / prizes.length;
+
+function drawWheel() {
+  const startAngle = 0;
+  const endAngle = angleStep;
+  const sliceAngle = (2 * Math.PI) / prizes.length;
+
+  prizes.forEach((prize, index) => {
+    ctx.save();
+    ctx.translate(wheelRadius, wheelRadius);
+    ctx.rotate(sliceAngle * index);
+
+    ctx.beginPath();
+    ctx.moveTo(0, 0);
+    ctx.arc(0, 0, wheelRadius, startAngle, endAngle);
+    ctx.lineTo(0, 0);
+    ctx.fillStyle = "#ff6f61";
+    ctx.fill();
+
+    ctx.fillStyle = "#fff";
+    ctx.font = "bold 18px Arial";
+    ctx.fillText(prize, wheelRadius / 2 - ctx.measureText(prize).width / 2, 0);
+
+    ctx.restore();
+  });
+}
+
+let spinDegree = 0;
+
+// Spin the wheel
+function spinWheel() {
+  spinDegree += Math.random() * 5000 + 2000;
+  const duration = 3000;
+
+  let startTime;
+
+  function rotateWheel(timestamp) {
+    if (!startTime) startTime = timestamp;
+
+    const progress = timestamp - startTime;
+    if (progress < duration) {
+      const spin = (progress / duration) * spinDegree;
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      drawWheel();
+      ctx.save();
+      ctx.translate(wheelRadius, wheelRadius);
+      ctx.rotate(spin * Math.PI / 180);
+      ctx.restore();
+      requestAnimationFrame(rotateWheel);
+    } else {
+      const winningSlice = Math.floor((spinDegree % 360) / (360 / prizes.length));
+      showResult(winningSlice);
+    }
+  }
+
+  requestAnimationFrame(rotateWheel);
+}
+
+// Show the result of the spin
+function showResult(sliceIndex) {
+  const winningPrize = prizes[sliceIndex];
+  prizeElement.textContent = winningPrize;
+
+  // Assign the link based on the prize
+  if (winningPrize === "Free Gift Card ($10)") {
+    claimButton.href = "https://youraffiliateurl.com";  // Capgrip link
+  } else if (winningPrize === "50% Off Temu Purchase") {
+    claimButton.href = "https://temu.com/discount";  // Temu discount link
+  } else if (winningPrize === "Win $100 Cash") {
+    claimButton.href = "https://youraffiliateurl.com";  // Another offer link
+  } else if (winningPrize === "Free Shipping on Temu") {
+    claimButton.href = "https://temu.com/freeshipping";  // Temu free shipping link
+  } else {
+    claimButton.href = "#"; // Default link if no specific offer
+  }
+
+  result.style.display = "block"; // Show the result
+}
+
+// Event listener for the spin button
+spinButton.addEventListener("click", () => {
+  result.style.display = "none";
+  spinWheel();
+});
+
+// Initialize wheel
+drawWheel();
